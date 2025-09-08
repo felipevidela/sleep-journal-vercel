@@ -13,7 +13,7 @@ export type SleepLog = {
 export async function ensureTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS sleep_logs (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id BIGSERIAL PRIMARY KEY,
       date DATE NOT NULL UNIQUE,
       rating INT NOT NULL CHECK (rating >= 1 AND rating <= 10),
       comments TEXT,
