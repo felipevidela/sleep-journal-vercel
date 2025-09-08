@@ -63,28 +63,35 @@ async function deleteEntry(formData: FormData) {
 }
 
 async function getData() {
-  await ensureTable();
-  const list = await sql<Row>`SELECT id, date, rating, comments, created_at, updated_at
-                             FROM sleep_logs
-                             ORDER BY date DESC`;
+  console.log("Fetching data...");
+  try {
+    await ensureTable();
+    const list = await sql<Row>`SELECT id, date, rating, comments, created_at, updated_at
+                               FROM sleep_logs
+                               ORDER BY date DESC`;
 
-  const avg7 = await sql<{ avg: number | null }>`
-    SELECT AVG(rating)::float AS avg
-    FROM sleep_logs
-    WHERE date >= CURRENT_DATE - INTERVAL '6 days';
-  `;
+    const avg7 = await sql<{ avg: number | null }>`
+      SELECT AVG(rating)::float AS avg
+      FROM sleep_logs
+      WHERE date >= CURRENT_DATE - INTERVAL '6 days';
+    `;
 
-  const avg30 = await sql<{ avg: number | null }>`
-    SELECT AVG(rating)::float AS avg
-    FROM sleep_logs
-    WHERE date >= CURRENT_DATE - INTERVAL '29 days';
-  `;
+    const avg30 = await sql<{ avg: number | null }>`
+      SELECT AVG(rating)::float AS avg
+      FROM sleep_logs
+      WHERE date >= CURRENT_DATE - INTERVAL '29 days';
+    `;
 
-  return {
-    entries: list.rows,
-    avg7: avg7.rows[0]?.avg,
-    avg30: avg30.rows[0]?.avg,
-  };
+    console.log("Data fetched successfully.");
+    return {
+      entries: list.rows,
+      avg7: avg7.rows[0]?.avg,
+      avg30: avg30.rows[0]?.avg,
+    };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw new Error("Could not fetch data from the database.");
+  }
 }
 
 export default async function Page() {
