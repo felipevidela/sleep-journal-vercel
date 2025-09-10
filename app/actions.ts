@@ -3,9 +3,8 @@
 import { sql } from "@vercel/postgres";
 import { ensureTables } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
+import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-
 
 type Row = {
   id: string;
@@ -18,17 +17,17 @@ type Row = {
 };
 
 async function requireAuth() {
-  const session = await getServerSession();
-  if (!session?.user?.email) {
+  const user = await getSessionUser();
+  if (!user) {
     redirect('/auth/signin');
   }
-  return session;
+  return user;
 }
 
 // Server Action: Upsert (insertar o actualizar por fecha)
 export async function upsertEntry(formData: FormData) {
-  const session = await requireAuth();
-  const userId = session.user!.email!; // Use email as user ID for simplicity
+  const user = await requireAuth();
+  const userId = user.id;
   
   const date = String(formData.get("date") || "").trim();
   const ratingRaw = String(formData.get("rating") || "").trim();
@@ -50,46 +49,67 @@ export async function upsertEntry(formData: FormData) {
   if (rating < 1) rating = 1;
   if (rating > 10) rating = 10;
 
-  await ensureTables();
+  try {
+    await ensureTables();
+    
+    // Upsert: try to insert, on conflict update
+    await sql`
+      INSERT INTO sleep_logs (user_id, date, rating, comments)
+      VALUES (${userId}, ${date}, ${rating}, ${comments || null})
+      ON CONFLICT (user_id, date)
+      DO UPDATE SET
+        rating = EXCLUDED.rating,
+        comments = EXCLUDED.comments,
+        updated_at = NOW()
+    `;
 
-  await sql`
-    INSERT INTO sleep_logs (user_id, date, rating, comments)
-    VALUES (${userId}, ${date}, ${rating}, NULLIF(${comments}, ''))
-    ON CONFLICT (user_id, date) DO UPDATE SET
-      rating = EXCLUDED.rating,
-      comments = EXCLUDED.comments,
-      updated_at = NOW();
-  `;
+    console.log(`Entry upserted for user ${userId}: ${date} -> ${rating}/10`);
+  } catch (error) {
+    console.error("Error upserting entry:", error);
+    throw new Error("Could not save entry to database.");
+  }
 
   revalidatePath("/");
 }
 
-// Server Action: Delete by id
+// Server Action: Delete entry
 export async function deleteEntry(formData: FormData) {
-  const session = await requireAuth();
-  const userId = session.user!.email!;
+  const user = await requireAuth();
+  const userId = user.id;
   
-  const id = String(formData.get("id") || "");
-  if (!id) return;
-  
-  await ensureTables();
-  await sql`DELETE FROM sleep_logs WHERE id = ${id} AND user_id = ${userId}`;
+  const id = String(formData.get("id") || "").trim();
+  if (!id) throw new Error("ID es obligatorio");
+
+  try {
+    await ensureTables();
+    await sql`DELETE FROM sleep_logs WHERE id = ${id} AND user_id = ${userId}`;
+    console.log(`Entry deleted for user ${userId}: ${id}`);
+  } catch (error) {
+    console.error("Error deleting entry:", error);
+    throw new Error("Could not delete entry from database.");
+  }
+
   revalidatePath("/");
+}
+
+export async function getCurrentUser() {
+  const user = await getSessionUser();
+  return user;
 }
 
 export async function getData() {
-  const session = await getServerSession();
-  if (!session?.user?.email) {
-    return { entries: [], avg7: null, avg30: null };
+  const user = await getSessionUser();
+  if (!user) {
+    return { entries: [], avg7: null, avg30: null, user: null };
   }
-  const userId = session.user.email;
+  const userId = user.id;
   
   console.log("Fetching data for user:", userId);
   try {
     await ensureTables();
     
     const list = await sql<Row>`
-      SELECT id, user_id, date, rating, comments, created_at, updated_at
+      SELECT id::text, user_id::text, date::text, rating, comments, created_at::text, updated_at::text
       FROM sleep_logs
       WHERE user_id = ${userId}
       ORDER BY date DESC
@@ -123,6 +143,7 @@ export async function getData() {
       })),
       avg7: avg7.rows[0]?.avg,
       avg30: avg30.rows[0]?.avg,
+      user: user,
     };
   } catch (error) {
     console.error("Error fetching data:", error);

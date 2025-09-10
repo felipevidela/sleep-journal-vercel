@@ -104,6 +104,43 @@ input[type=number] {
   background: rgb(var(--bg-primary));
   border-color: rgb(var(--border));
   color: rgb(var(--text-primary));
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+/* Ensure date inputs use the same font */
+input[type="date"] {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+}
+
+/* Date input specific webkit styling */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Date input calendar button */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  font-family: inherit !important;
+}
+
+/* Firefox date input styling */
+input[type="date"]::-moz-datetime-edit,
+input[type="date"]::-moz-datetime-edit-fields-wrapper,
+input[type="date"]::-moz-datetime-edit-text,
+input[type="date"]::-moz-datetime-edit-month-field,
+input[type="date"]::-moz-datetime-edit-day-field,
+input[type="date"]::-moz-datetime-edit-year-field {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
 }
 
 .input-field:focus {

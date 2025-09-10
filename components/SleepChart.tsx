@@ -171,10 +171,10 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
           📈 Tendencias de Sueño
         </h3>
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-gray-700 dark:text-gray-400 mb-2">
             No hay suficientes datos para mostrar el gráfico
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
+          <p className="text-sm text-gray-600 dark:text-gray-500">
             Agrega algunos registros de sueño para ver las tendencias
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
         </h3>
         
         {stats && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+          <div className="text-xs text-gray-600 dark:text-gray-400 text-right">
             <div>Promedio: {stats.average}/10</div>
             <div>{stats.total} registros</div>
           </div>
@@ -207,21 +207,21 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {stats.highest}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Mejor</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Mejor</div>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {stats.average}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Promedio</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Promedio</div>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {stats.lowest}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Menor</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Menor</div>
           </div>
         </div>
       )}

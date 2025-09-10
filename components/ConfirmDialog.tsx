@@ -67,7 +67,7 @@ export default function ConfirmDialog({
                 </p>
                 
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Nota:</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Nota:</span>
                   <span className="font-semibold">{entry.rating}/10</span>
                   <div
                     className="h-2 w-16 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500"
@@ -77,7 +77,7 @@ export default function ConfirmDialog({
                 
                 {entry.comments && (
                   <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Comentarios:</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Comentarios:</span>
                     <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">
                       {entry.comments.length > 100 
                         ? entry.comments.substring(0, 100) + '...' 

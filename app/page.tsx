@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { 
   Moon, Sun, Download, Filter, Search,
   Trash2, X, ChevronDown, ChevronUp, AlertCircle, LogOut, User
@@ -26,6 +26,7 @@ interface PageData {
   entries: SleepEntry[];
   avg7: number | null;
   avg30: number | null;
+  user: { id: string; name: string; email: string; age: number; city: string; country: string; gender: string } | null;
 }
 
 interface FilterState {
@@ -53,10 +54,12 @@ function formatDatePretty(isoDate: string) {
 }
 
 export default function Page() {
-  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [user, setUser] = useState<{ id: string; name: string; email: string; age: number; city: string; country: string } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   
   // State management
-  const [data, setData] = useState<PageData>({ entries: [], avg7: null, avg30: null });
+  const [data, setData] = useState<PageData>({ entries: [], avg7: null, avg30: null, user: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
@@ -87,15 +90,35 @@ export default function Page() {
   // Quick notes state
   const [showQuickNotes, setShowQuickNotes] = useState(false);
 
-  // Initialize dark mode and load data
+  // Initialize dark mode, check auth and load data
   useEffect(() => {
     // Initialize dark mode
     const darkMode = initializeDarkMode();
     setIsDark(darkMode);
     
-    // Load data
-    loadData();
+    // Check authentication
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const result = await getData();
+      if (result && result.user) {
+        setData(result);
+        // Use real user data from the session
+        setUser(result.user);
+      } else {
+        router.push('/auth/signin');
+        return;
+      }
+    } catch (err) {
+      router.push('/auth/signin');
+      return;
+    } finally {
+      setAuthLoading(false);
+      setLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -104,14 +127,37 @@ export default function Page() {
       const result = await getData();
       if (result) {
         setData(result);
+        // Update user info if it comes with the data
+        if (result.user) {
+          setUser(result.user);
+        }
       } else {
-        setData({ entries: [], avg7: null, avg30: null });
+        setData({ entries: [], avg7: null, avg30: null, user: null });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos');
-      setData({ entries: [], avg7: null, avg30: null });
+      setData({ entries: [], avg7: null, avg30: null, user: null });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        router.push('/auth/signin');
+      } else {
+        console.error('Error signing out');
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
@@ -208,7 +254,7 @@ export default function Page() {
   const filteredEntries = getFilteredEntries();
 
   // Show loading while checking authentication
-  if (status === 'loading' || loading) {
+  if (authLoading || loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-6 min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -221,9 +267,8 @@ export default function Page() {
     );
   }
 
-  // Redirect to signin if not authenticated
-  if (status === 'unauthenticated') {
-    window.location.href = '/auth/signin';
+  // Don't render if not authenticated (redirect is handled in checkAuth)
+  if (!user) {
     return null;
   }
 
@@ -232,29 +277,21 @@ export default function Page() {
       {/* User header - Mobile optimized */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {session?.user?.image ? (
-            <img
-              src={session.user.image}
-              alt="Profile"
-              className="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-700"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
-          )}
+          <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+            <User className="h-4 w-4 text-white" />
+          </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-              {session?.user?.name || 'Usuario'}
+              {user?.name || 'Usuario'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {session?.user?.email}
+            <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+              {user?.email || 'usuario@email.com'}
             </p>
           </div>
         </div>
         
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="btn text-sm px-3 py-2"
           title="Cerrar sesión"
         >
@@ -270,7 +307,7 @@ export default function Page() {
               <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
                 💤 Sleep Journal
               </h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-400">
                 Registra cómo dormiste: fecha, nota (1–10) y comentarios
               </p>
             </div>
@@ -299,11 +336,11 @@ export default function Page() {
           {/* Stats - Mobile optimized */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Últimos 7 días</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 7 días</div>
               <div className="text-lg sm:text-2xl font-semibold">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
             </div>
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Últimos 30 días</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 30 días</div>
               <div className="text-lg sm:text-2xl font-semibold">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
             </div>
           </div>
@@ -317,7 +354,7 @@ export default function Page() {
             <h2 className="text-base sm:text-lg font-semibold">Tendencias</h2>
             <button
               onClick={() => setShowChart(false)}
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1 rounded"
+              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1 rounded"
             >
               Ocultar <ChevronUp className="h-3 w-3 inline ml-1" />
             </button>
@@ -370,7 +407,12 @@ export default function Page() {
                 <input
                   type="number"
                   value={formData.rating}
-                  onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value >= 1 && value <= 10) {
+                      setFormData({ ...formData, rating: value });
+                    }
+                  }}
                   min={1}
                   max={10}
                   className="input-field mt-1"
@@ -455,7 +497,7 @@ export default function Page() {
             <div className="space-y-3">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <input
                   type="text"
                   placeholder="Buscar en comentarios..."
@@ -508,7 +550,7 @@ export default function Page() {
                   onChange={(e) => setFilters({ ...filters, minRating: parseInt(e.target.value) || 1 })}
                   className="input-field flex-1 text-center text-sm"
                 />
-                <span className="text-gray-400">-</span>
+                <span className="text-gray-600 dark:text-gray-400">-</span>
                 <input
                   type="number"
                   min={1}
@@ -543,7 +585,7 @@ export default function Page() {
 
         {filteredEntries.length === 0 && !error && (
           <div className="card p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+            <p className="text-gray-700 dark:text-gray-400 mb-2 text-sm">
               {filters.search || filters.month || filters.minRating > 1 || filters.maxRating < 10
                 ? 'No se encontraron registros con los filtros aplicados'
                 : 'Aún no hay registros. ¡Comienza arriba!'}
@@ -566,7 +608,7 @@ export default function Page() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium mb-1 truncate">{formatDatePretty(entry.date)}</div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Nota:</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Nota:</span>
                     <span className="text-sm font-semibold">{entry.rating}/10</span>
                     <div
                       className="h-2 w-16 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500 flex-shrink-0"
@@ -578,7 +620,7 @@ export default function Page() {
                       {entry.comments}
                     </p>
                   )}
-                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  <div className="text-xs text-gray-600 dark:text-gray-500 mt-2">
                     {(() => {
                       try {
                         const date = typeof entry.updated_at === 'string' 
@@ -599,7 +641,7 @@ export default function Page() {
 
                 <button
                   onClick={() => handleDelete(entry)}
-                  className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+                  className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
                   title="Eliminar registro"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -610,7 +652,7 @@ export default function Page() {
         </ul>
       </section>
 
-      <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4">
+      <footer className="text-center text-xs text-gray-600 dark:text-gray-400 py-4">
         Hecho con ❤️ · Next.js · Vercel
         <br />
         <span className="inline-block mt-1">🔒 Datos privados y seguros</span>

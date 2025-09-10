@@ -2,7 +2,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Providers from './providers';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -56,11 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
       <body className={inter.className}>
-        <Providers>
-          <div className="min-h-screen">
-            {children}
-          </div>
-        </Providers>
+        <div className="min-h-screen">
+          {children}
+        </div>
       </body>
     </html>
   );
