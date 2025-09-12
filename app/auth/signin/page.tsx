@@ -132,14 +132,14 @@ export default function SignInPage() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input-field pl-10 pr-4"
+                  className="input-field pl-12 pr-4"
                   placeholder="Ingresa tu email"
                   autoComplete="off"
                   required
@@ -153,14 +153,14 @@ export default function SignInPage() {
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="input-field pl-10 pr-16"
+                  className="input-field pl-12 pr-16"
                   placeholder="Ingresa tu contraseña"
                   autoComplete="off"
                   required
