@@ -38,20 +38,22 @@ export default function ConfirmDialog({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
       
       {/* Dialog */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="card w-full max-w-md p-6 relative animate-in fade-in-0 zoom-in-95 duration-300">
+        <div className="card-elevated w-full max-w-md p-6 relative animate-in fade-in-0 zoom-in-95 duration-300">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
             disabled={isLoading}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
 
           {/* Content */}
@@ -61,18 +63,20 @@ export default function ConfirmDialog({
             </h3>
             
             <div className="space-y-3 mb-6">
-              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-                <p className="font-medium text-sm mb-2">
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <p className="font-medium text-sm mb-2 text-gray-900 dark:text-gray-100">
                   {formatDate(entry.date)}
                 </p>
                 
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-gray-600 dark:text-gray-400">Nota:</span>
-                  <span className="font-semibold">{entry.rating}/10</span>
-                  <div
-                    className="h-2 w-16 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500"
-                    style={{ opacity: Math.max(0.35, entry.rating / 10) }}
-                  />
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{entry.rating}/10</span>
+                  <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500"
+                      style={{ width: `${entry.rating * 10}%` }}
+                    />
+                  </div>
                 </div>
                 
                 {entry.comments && (

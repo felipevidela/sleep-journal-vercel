@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Moon, Sun, Download, Filter, Search,
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import SleepChart from '@/components/SleepChart';
+import AdvancedAnalytics from '@/components/AdvancedAnalytics';
+import QuickInsights from '@/components/QuickInsights';
 import {
   SleepEntry,
   isDateInFuture,
@@ -18,7 +20,8 @@ import {
   searchEntriesByComment,
   QUICK_NOTES,
   initializeDarkMode,
-  toggleDarkMode
+  toggleDarkMode,
+  formatSleepDuration
 } from '@/lib/utils';
 import { upsertEntry, deleteEntry, getData } from './actions';
 
@@ -41,7 +44,7 @@ function formatDatePretty(isoDate: string) {
   try {
     let dateToFormat = isoDate;
     if (isoDate.includes('T')) {
-      dateToFormat = isoDate.split('T')[0];
+      dateToFormat = isoDate.split('T')[0] || isoDate;
     }
     const d = new Date(dateToFormat + "T00:00:00");
     if (isNaN(d.getTime())) {
@@ -54,6 +57,17 @@ function formatDatePretty(isoDate: string) {
 }
 
 export default function Page() {
+  console.log("Client: Page component rendered");
+  
+  // Simple test to see if client-side JavaScript is working
+  if (typeof window !== 'undefined') {
+    console.log("Client: We are in the browser!");
+    console.log("Client: Window object exists:", !!window);
+    console.log("Client: Document exists:", !!document);
+  } else {
+    console.log("Client: We are on the server");
+  }
+  
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; name: string; email: string; age: number; city: string; country: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -68,13 +82,16 @@ export default function Page() {
   // UI state
   const [showFilters, setShowFilters] = useState(false);
   const [showChart, setShowChart] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; entry: SleepEntry | null }>({ isOpen: false, entry: null });
   
   // Form state
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    rating: 7,
-    comments: ''
+    date: new Date().toISOString().split('T')[0] || '',
+    rating: '',
+    comments: '',
+    start_time: '',
+    end_time: ''
   });
   const [formError, setFormError] = useState<string | null>(null);
   
@@ -90,31 +107,28 @@ export default function Page() {
   // Quick notes state
   const [showQuickNotes, setShowQuickNotes] = useState(false);
 
-  // Initialize dark mode, check auth and load data
-  useEffect(() => {
-    // Initialize dark mode
-    const darkMode = initializeDarkMode();
-    setIsDark(darkMode);
-    
-    // Check authentication
-    checkAuth();
-  }, []);
-
   const checkAuth = async () => {
+    console.log("Client: checkAuth started");
     try {
+      console.log("Client: calling getData Server Action...");
       const result = await getData();
+      console.log("Client: Server Action result:", result);
       if (result && result.user) {
+        console.log("Client: Setting data and user");
         setData(result);
-        // Use real user data from the session
         setUser(result.user);
+        console.log("Client: Auth successful");
       } else {
+        console.log("Client: No user in result, redirecting to signin");
         router.push('/auth/signin');
         return;
       }
     } catch (err) {
+      console.log("Client: Error in checkAuth:", err);
       router.push('/auth/signin');
       return;
     } finally {
+      console.log("Client: Setting loading states to false");
       setAuthLoading(false);
       setLoading(false);
     }
@@ -141,6 +155,42 @@ export default function Page() {
       setLoading(false);
     }
   };
+
+  // Initialize dark mode, check auth and load data
+  useEffect(() => {
+    console.log("Client: useEffect triggered");
+    console.log("Client: checkAuth function exists:", typeof checkAuth);
+    
+    // Initialize dark mode
+    console.log("Client: Initializing dark mode");
+    const darkMode = initializeDarkMode();
+    setIsDark(darkMode);
+    console.log("Client: Dark mode set to:", darkMode);
+    
+    // Check authentication
+    console.log("Client: About to call checkAuth");
+    checkAuth().catch(err => console.log("Client: checkAuth error:", err));
+    
+    // Fallback: Force loading to false after 10 seconds
+    const fallbackTimeout = setTimeout(() => {
+      console.log("Client: Fallback timeout - forcing loading to false");
+      setAuthLoading(false);
+      setLoading(false);
+    }, 10000);
+    
+    return () => clearTimeout(fallbackTimeout);
+  }, []);
+
+  // Force clean form on component mount
+  useEffect(() => {
+    setFormData({
+      date: new Date().toISOString().split('T')[0] || '',
+      rating: '',
+      comments: '',
+      start_time: '',
+      end_time: ''
+    });
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -179,16 +229,24 @@ export default function Page() {
       return;
     }
 
+    // Validar que rating no esté vacío
+    if (!formData.rating || formData.rating === '') {
+      setFormError('La nota es obligatoria');
+      return;
+    }
+
     const form = new FormData();
     form.append('date', formData.date);
     form.append('rating', formData.rating.toString());
     form.append('comments', formData.comments);
+    form.append('start_time', formData.start_time);
+    form.append('end_time', formData.end_time);
 
     try {
       startTransition(async () => {
         await upsertEntry(form);
         await loadData();
-        setFormData({ ...formData, comments: '' }); // Clear comments but keep date and rating
+        setFormData({ ...formData, rating: '', comments: '', start_time: '', end_time: '' }); // Clear rating, comments and times but keep date
       });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error al guardar');
@@ -254,15 +312,112 @@ export default function Page() {
   const filteredEntries = getFilteredEntries();
 
   // Show loading while checking authentication
+  console.log("Client: Render state - authLoading:", authLoading, "loading:", loading, "user:", !!user);
   if (authLoading || loading) {
+    console.log("Client: Showing loading skeleton");
     return (
       <div className="mx-auto max-w-4xl px-4 py-6 min-h-screen">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
+        {/* Header Skeleton */}
+        <header className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+              <div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20 mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            </div>
           </div>
-        </div>
+          
+          {/* Stats Skeleton */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="card p-4">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 mb-2"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-10"></div>
+            </div>
+            <div className="card p-4">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 mb-2"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-10"></div>
+            </div>
+          </div>
+        </header>
+
+        {/* Chart Skeleton */}
+        <section className="mb-6">
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+            </div>
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-4"></div>
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-8 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-12 mx-auto"></div>
+              </div>
+              <div className="text-center">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-8 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 mx-auto"></div>
+              </div>
+              <div className="text-center">
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-8 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-12 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Form Skeleton */}
+        <section className="mb-6">
+          <div className="card p-4">
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mb-4"></div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-12 mb-1"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-12 mb-1"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+              <div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20 mb-1"></div>
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              </div>
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Entries List Skeleton */}
+        <section>
+          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mb-2"></div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-8"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-10"></div>
+                      <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4 mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     );
   }
@@ -335,15 +490,18 @@ export default function Page() {
 
           {/* Stats - Mobile optimized */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-3">
+            <div className="card p-3">
               <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 7 días</div>
-              <div className="text-lg sm:text-2xl font-semibold">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
             </div>
-            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-3">
+            <div className="card p-3">
               <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 30 días</div>
-              <div className="text-lg sm:text-2xl font-semibold">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
             </div>
           </div>
+
+          {/* Quick Insights */}
+          <QuickInsights entries={data?.entries || []} />
         </div>
       </header>
 
@@ -374,6 +532,33 @@ export default function Page() {
         </div>
       )}
 
+      {/* Advanced Analytics - Collapsible */}
+      {showAnalytics && (
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base sm:text-lg font-semibold">Análisis Avanzado</h2>
+            <button
+              onClick={() => setShowAnalytics(false)}
+              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1 rounded"
+            >
+              Ocultar <ChevronUp className="h-3 w-3 inline ml-1" />
+            </button>
+          </div>
+          <AdvancedAnalytics entries={data?.entries || []} />
+        </section>
+      )}
+
+      {!showAnalytics && data?.entries && data.entries.length >= 3 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowAnalytics(true)}
+            className="btn w-full"
+          >
+            📊 Mostrar Análisis Avanzado <ChevronDown className="h-4 w-4 ml-2" />
+          </button>
+        </div>
+      )}
+
       {/* Form - Mobile optimized */}
       <section className="mb-6">
         <div className="card p-4">
@@ -387,7 +572,7 @@ export default function Page() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" key="sleep-form-v2">
             {/* Mobile-first form layout */}
             <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
               <label className="block">
@@ -406,20 +591,83 @@ export default function Page() {
                 <span className="text-sm text-gray-700 dark:text-gray-300">Nota (1–10)</span>
                 <input
                   type="number"
-                  value={formData.rating}
+                  value={formData.rating === '' ? '' : formData.rating}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 1 && value <= 10) {
+                    const value = e.target.value;
+                    // Permitir campo vacío o números enteros del 1 al 10
+                    if (value === '' || (/^[1-9]$|^10$/.test(value))) {
                       setFormData({ ...formData, rating: value });
                     }
                   }}
+                  onBlur={(e) => {
+                    // Si el campo está vacío al perder foco, no hacer nada
+                    // La validación required se encargará del resto
+                  }}
                   min={1}
                   max={10}
+                  step={1}
+                  placeholder=""
                   className="input-field mt-1"
+                  autoComplete="off"
+                  data-testid="rating-input"
+                  key="rating-input-clean"
                   required
                 />
               </label>
             </div>
+
+            {/* Time tracking section - Formato militar (24h) */}
+            <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+              <label className="block">
+                <span className="text-sm text-gray-700 dark:text-gray-300">Hora de dormir (24h)</span>
+                <input
+                  type="time"
+                  value={formData.start_time || ''}
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  className="input-field mt-1"
+                  placeholder="23:30"
+                  autoComplete="off"
+                  data-testid="start-time-input"
+                  key="start-time-military"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">Formato: HH:MM (ej: 23:30)</span>
+              </label>
+
+              <label className="block">
+                <span className="text-sm text-gray-700 dark:text-gray-300">Hora de despertar (24h)</span>
+                <input
+                  type="time"
+                  value={formData.end_time || ''}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  className="input-field mt-1"
+                  placeholder="07:30"
+                  autoComplete="off"
+                  data-testid="end-time-input"
+                  key="end-time-military"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">Formato: HH:MM (ej: 07:30)</span>
+              </label>
+            </div>
+
+            {/* Sleep duration display */}
+            {formData.start_time && formData.end_time && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="text-sm text-blue-700 dark:text-blue-300">
+                  <strong>Duración estimada:</strong> {(() => {
+                    const duration = formatSleepDuration({
+                      hours: 0,
+                      minutes: 0,
+                      totalMinutes: (() => {
+                        const start = new Date(`2000-01-01T${formData.start_time}`);
+                        const end = new Date(`2000-01-${formData.start_time > formData.end_time ? '02' : '01'}T${formData.end_time}`);
+                        return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+                      })()
+                    });
+                    return duration;
+                  })()}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -610,11 +858,36 @@ export default function Page() {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs text-gray-600 dark:text-gray-400">Nota:</span>
                     <span className="text-sm font-semibold">{entry.rating}/10</span>
-                    <div
-                      className="h-2 w-16 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500 flex-shrink-0"
-                      style={{ opacity: Math.max(0.35, entry.rating / 10) }}
-                    />
+                    <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500 transition-all duration-300"
+                        style={{ width: `${entry.rating * 10}%` }}
+                        aria-label={`Calificación: ${entry.rating} de 10`}
+                      />
+                    </div>
                   </div>
+                  
+                  {/* Sleep time information - Formato militar */}
+                  {(entry.start_time || entry.end_time || entry.sleep_duration_minutes) && (
+                    <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      {entry.start_time && (
+                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">🛌 {entry.start_time}h</span>
+                      )}
+                      {entry.end_time && (
+                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">⏰ {entry.end_time}h</span>
+                      )}
+                      {entry.sleep_duration_minutes && (
+                        <span className="font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                          ⏱️ {formatSleepDuration({
+                            hours: entry.sleep_duration_hours || 0,
+                            minutes: 0,
+                            totalMinutes: entry.sleep_duration_minutes
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   {entry.comments && (
                     <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                       {entry.comments}

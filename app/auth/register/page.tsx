@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { COUNTRIES, GENDERS } from '@/lib/countries';
 
@@ -180,16 +180,19 @@ export default function RegisterPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email *
               </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`input-field ${fieldErrors.email ? 'border-red-300 dark:border-red-600' : ''}`}
-                placeholder="tu@email.com"
-                required
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`input-field pl-10 ${fieldErrors.email ? 'border-red-300 dark:border-red-600' : ''}`}
+                  placeholder="tu@email.com"
+                  required
+                />
+              </div>
               {fieldErrors.email && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.email}</p>
               )}
@@ -201,13 +204,14 @@ export default function RegisterPage() {
                 Contraseña *
               </label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input-field pr-10 ${fieldErrors.password ? 'border-red-300 dark:border-red-600' : ''}`}
+                  className={`input-field pl-10 pr-10 ${fieldErrors.password ? 'border-red-300 dark:border-red-600' : ''}`}
                   placeholder="Mínimo 6 caracteres"
                   required
                 />
@@ -230,13 +234,14 @@ export default function RegisterPage() {
                 Confirmar contraseña *
               </label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`input-field pr-10 ${fieldErrors.confirmPassword ? 'border-red-300 dark:border-red-600' : ''}`}
+                  className={`input-field pl-10 pr-10 ${fieldErrors.confirmPassword ? 'border-red-300 dark:border-red-600' : ''}`}
                   placeholder="Confirma tu contraseña"
                   required
                 />

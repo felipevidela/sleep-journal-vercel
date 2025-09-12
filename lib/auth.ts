@@ -41,7 +41,12 @@ export async function createUser(userData: {
       throw new Error("Failed to create user");
     }
     
-    return result.rows[0];
+    const user = result.rows[0];
+    if (!user) {
+      throw new Error("Failed to create user");
+    }
+    
+    return user;
   } catch (error: any) {
     if (error.constraint === 'users_email_key') {
       throw new Error("El email ya está registrado");
@@ -66,6 +71,10 @@ export async function authenticateUser(email: string, password: string): Promise
     }
     
     const user = result.rows[0];
+    if (!user) {
+      return null;
+    }
+    
     const isValidPassword = await verifyPassword(password, user.password_hash);
     
     if (!isValidPassword) {
@@ -144,7 +153,12 @@ export async function getSessionUser(): Promise<User | null> {
       return null;
     }
     
-    const { expires_at, ...user } = result.rows[0];
+    const row = result.rows[0];
+    if (!row) {
+      return null;
+    }
+    
+    const { expires_at, ...user } = row;
     return user;
   } catch (error) {
     console.error("Error getting session user:", error);

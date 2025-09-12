@@ -6,6 +6,10 @@ export type SleepEntry = {
   date: string;
   rating: number;
   comments: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  sleep_duration_hours: number | null;
+  sleep_duration_minutes: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -20,12 +24,12 @@ export function isDateInFuture(dateString: string): boolean {
 
 export function getMaxDate(): string {
   const today = new Date();
-  return today.toISOString().split('T')[0];
+  return today.toISOString().split('T')[0] || '';
 }
 
 // CSV Export functionality
 export function exportToCSV(entries: SleepEntry[], filename = 'sleep-journal-export.csv'): void {
-  const headers = ['Fecha', 'Nota', 'Comentarios', 'Creado', 'Actualizado'];
+  const headers = ['Fecha', 'Nota', 'Comentarios', 'Hora Dormir', 'Hora Despertar', 'Duración (horas)', 'Duración (minutos)', 'Creado', 'Actualizado'];
   
   const csvContent = [
     headers.join(','),
@@ -33,6 +37,10 @@ export function exportToCSV(entries: SleepEntry[], filename = 'sleep-journal-exp
       entry.date,
       entry.rating,
       `"${(entry.comments || '').replace(/"/g, '""')}"`, // Escape quotes in comments
+      entry.start_time || '',
+      entry.end_time || '',
+      entry.sleep_duration_hours || '',
+      entry.sleep_duration_minutes || '',
       entry.created_at,
       entry.updated_at
     ].join(','))
@@ -165,5 +173,84 @@ export function toggleDarkMode(isDark: boolean): void {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
+  }
+}
+
+// Sleep duration calculation utilities
+export interface SleepDuration {
+  hours: number;
+  minutes: number;
+  totalMinutes: number;
+}
+
+/**
+ * Calculate sleep duration between start and end times
+ * Handles overnight sleep (e.g., 23:00 to 07:00)
+ */
+export function calculateSleepDuration(startTime: string, endTime: string): SleepDuration | null {
+  if (!startTime || !endTime) return null;
+  
+  // Parse times
+  const startParts = startTime.split(':').map(Number);
+  const endParts = endTime.split(':').map(Number);
+  
+  if (startParts.length !== 2 || endParts.length !== 2) {
+    return null;
+  }
+  
+  const startHour = startParts[0]!;
+  const startMin = startParts[1]!;
+  const endHour = endParts[0]!;
+  const endMin = endParts[1]!;
+  
+  // Validate time format
+  if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) {
+    return null;
+  }
+  
+  // Create Date objects for calculation (using arbitrary date)
+  const baseDate = new Date('2000-01-01');
+  const start = new Date(baseDate);
+  start.setHours(startHour, startMin, 0, 0);
+  
+  const end = new Date(baseDate);
+  end.setHours(endHour, endMin, 0, 0);
+  
+  // If end time is earlier than start time, assume it's next day
+  if (end <= start) {
+    end.setDate(end.getDate() + 1);
+  }
+  
+  // Calculate difference in milliseconds
+  const diffMs = end.getTime() - start.getTime();
+  const totalMinutes = Math.round(diffMs / (1000 * 60));
+  
+  // Convert to hours and minutes
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const decimalHours = Math.round((totalMinutes / 60) * 100) / 100; // Round to 2 decimal places
+  
+  return {
+    hours: decimalHours,
+    minutes: minutes,
+    totalMinutes: totalMinutes
+  };
+}
+
+/**
+ * Format duration for display
+ */
+export function formatSleepDuration(duration: SleepDuration | null): string {
+  if (!duration) return '';
+  
+  const hours = Math.floor(duration.totalMinutes / 60);
+  const minutes = duration.totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes}m`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h ${minutes}m`;
   }
 }

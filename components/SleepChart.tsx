@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { SleepEntry, prepareChartData, calculateMovingAverage } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 ChartJS.register(
   CategoryScale,
@@ -30,9 +31,63 @@ interface SleepChartProps {
   days?: number;
 }
 
+interface ThemeColors {
+  primary: string;
+  primaryLight: string;
+  secondary: string;
+  textPrimary: string;
+  textSecondary: string;
+  border: string;
+  bgPrimary: string;
+}
+
 export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
   const { labels, data } = prepareChartData(entries, days);
   const movingAverage = calculateMovingAverage(data, 7);
+  
+  const [themeColors, setThemeColors] = useState<ThemeColors>({
+    primary: 'rgb(99, 102, 241)',
+    primaryLight: 'rgba(99, 102, 241, 0.1)',
+    secondary: 'rgb(34, 197, 94)',
+    textPrimary: 'rgb(17, 24, 39)',
+    textSecondary: 'rgb(75, 85, 99)',
+    border: 'rgb(229, 231, 235)',
+    bgPrimary: 'rgb(255, 255, 255)',
+  });
+
+  useEffect(() => {
+    const updateThemeColors = () => {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const isDark = document.documentElement.classList.contains('dark');
+      
+      setThemeColors({
+        primary: isDark ? 'rgb(99, 102, 241)' : 'rgb(99, 102, 241)',
+        primaryLight: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)',
+        secondary: isDark ? 'rgb(34, 197, 94)' : 'rgb(34, 197, 94)',
+        textPrimary: `rgb(${computedStyle.getPropertyValue('--text-primary').trim()})`,
+        textSecondary: `rgb(${computedStyle.getPropertyValue('--text-secondary').trim()})`,
+        border: `rgb(${computedStyle.getPropertyValue('--border').trim()})`,
+        bgPrimary: `rgb(${computedStyle.getPropertyValue('--bg-primary').trim()})`,
+      });
+    };
+
+    updateThemeColors();
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          setTimeout(updateThemeColors, 100);
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const chartData = {
     labels,
@@ -40,10 +95,10 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
       {
         label: 'Nota de sueño',
         data: data,
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        pointBackgroundColor: 'rgb(99, 102, 241)',
-        pointBorderColor: '#fff',
+        borderColor: themeColors.primary,
+        backgroundColor: themeColors.primaryLight,
+        pointBackgroundColor: themeColors.primary,
+        pointBorderColor: themeColors.bgPrimary,
         pointBorderWidth: 2,
         pointRadius: 4,
         pointHoverRadius: 6,
@@ -53,7 +108,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
       {
         label: 'Promedio móvil (7 días)',
         data: movingAverage,
-        borderColor: 'rgb(34, 197, 94)',
+        borderColor: themeColors.secondary,
         backgroundColor: 'transparent',
         pointRadius: 0,
         pointHoverRadius: 4,
@@ -76,16 +131,16 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
           font: {
             size: 12,
           },
-          color: 'rgb(var(--text-primary))',
+          color: themeColors.textPrimary,
         }
       },
       tooltip: {
         mode: 'index' as const,
         intersect: false,
-        backgroundColor: 'rgb(var(--bg-primary))',
-        titleColor: 'rgb(var(--text-primary))',
-        bodyColor: 'rgb(var(--text-primary))',
-        borderColor: 'rgb(var(--border))',
+        backgroundColor: themeColors.bgPrimary,
+        titleColor: themeColors.textPrimary,
+        bodyColor: themeColors.textPrimary,
+        borderColor: themeColors.border,
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -97,7 +152,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
           label: function(context: any) {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
-            if (value === null || value === undefined) return null;
+            if (value === null || value === undefined) return '';
             
             if (context.datasetIndex === 0) {
               return `${label}: ${value}/10`;
@@ -112,10 +167,10 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
       x: {
         display: true,
         grid: {
-          color: 'rgba(var(--border), 0.5)',
+          color: themeColors.border.replace('rgb(', 'rgba(').replace(')', ', 0.5)'),
         },
         ticks: {
-          color: 'rgb(var(--text-secondary))',
+          color: themeColors.textSecondary,
           font: {
             size: 11,
           },
@@ -128,7 +183,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
         max: 10,
         ticks: {
           stepSize: 1,
-          color: 'rgb(var(--text-secondary))',
+          color: themeColors.textSecondary,
           font: {
             size: 11,
           },
@@ -137,7 +192,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
           }
         },
         grid: {
-          color: 'rgba(var(--border), 0.3)',
+          color: themeColors.border.replace('rgb(', 'rgba(').replace(')', ', 0.3)'),
         }
       },
     },
@@ -148,7 +203,7 @@ export default function SleepChart({ entries, days = 30 }: SleepChartProps) {
     },
     elements: {
       point: {
-        hoverBackgroundColor: 'rgb(var(--bg-primary))',
+        hoverBackgroundColor: themeColors.bgPrimary,
       }
     }
   };

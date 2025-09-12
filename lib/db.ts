@@ -18,6 +18,10 @@ export type SleepLog = {
   date: string;      // ISO date (YYYY-MM-DD)
   rating: number;    // 1..10
   comments: string | null;
+  start_time: string | null; // HH:MM format (bedtime)
+  end_time: string | null;   // HH:MM format (wake up time)
+  sleep_duration_hours: number | null; // Duration in hours (decimal)
+  sleep_duration_minutes: number | null; // Duration in total minutes
   created_at: string;
   updated_at: string;
 };
@@ -69,10 +73,21 @@ export async function ensureTables() {
         date DATE NOT NULL,
         rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 10),
         comments TEXT,
+        start_time TIME,
+        end_time TIME,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(user_id, date)
       )
+    `;
+
+    // Add columns if they don't exist (for existing databases)
+    await sql`
+      ALTER TABLE sleep_logs 
+      ADD COLUMN IF NOT EXISTS start_time TIME,
+      ADD COLUMN IF NOT EXISTS end_time TIME,
+      ADD COLUMN IF NOT EXISTS sleep_duration_hours DECIMAL(4,2),
+      ADD COLUMN IF NOT EXISTS sleep_duration_minutes INTEGER
     `;
 
     // Create indexes for better performance
