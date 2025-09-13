@@ -490,11 +490,11 @@ export default function Page() {
 
           {/* Stats - Mobile optimized */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="card p-3">
+            <div className="card stats-card p-3">
               <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 7 días</div>
               <div className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
             </div>
-            <div className="card p-3">
+            <div className="card stats-card p-3">
               <div className="text-xs text-gray-600 dark:text-gray-400">Últimos 30 días</div>
               <div className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
             </div>
