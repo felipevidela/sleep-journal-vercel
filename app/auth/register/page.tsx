@@ -181,14 +181,14 @@ export default function RegisterPage() {
                 Email *
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`input-field pl-12 ${fieldErrors.email ? 'border-red-300 dark:border-red-600' : ''}`}
+                  className={`input-field !pl-14 ${fieldErrors.email ? 'border-red-300 dark:border-red-600' : ''}`}
                   placeholder="tu@email.com"
                   required
                 />
@@ -204,14 +204,14 @@ export default function RegisterPage() {
                 Contraseña *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input-field pl-12 pr-12 ${fieldErrors.password ? 'border-red-300 dark:border-red-600' : ''}`}
+                  className={`input-field !pl-14 pr-12 ${fieldErrors.password ? 'border-red-300 dark:border-red-600' : ''}`}
                   placeholder="Mínimo 6 caracteres"
                   required
                 />
@@ -234,14 +234,14 @@ export default function RegisterPage() {
                 Confirmar contraseña *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`input-field pl-12 pr-12 ${fieldErrors.confirmPassword ? 'border-red-300 dark:border-red-600' : ''}`}
+                  className={`input-field !pl-14 pr-12 ${fieldErrors.confirmPassword ? 'border-red-300 dark:border-red-600' : ''}`}
                   placeholder="Confirma tu contraseña"
                   required
                 />
