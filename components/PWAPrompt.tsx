@@ -22,7 +22,7 @@ export default function PWAPrompt() {
   }, [canInstall]);
 
   useEffect(() => {
-    // Show offline notice when going offline
+    // Show offline notice when going offline, hide when back online
     if (!isOnline) {
       setShowOfflineNotice(true);
       const timer = setTimeout(() => {
@@ -30,6 +30,9 @@ export default function PWAPrompt() {
       }, 5000);
       
       return () => clearTimeout(timer);
+    } else {
+      // Hide notice immediately when back online
+      setShowOfflineNotice(false);
     }
     return undefined;
   }, [isOnline]);
