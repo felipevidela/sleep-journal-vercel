@@ -61,11 +61,11 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
   
-  /* Refined gradients for elegant dark mode */
+  /* Colorful gradients for elegant dark mode */
   --gradient-bg: radial-gradient(ellipse at top, rgb(15, 23, 42) 0%, rgb(9, 17, 34) 50%, rgb(2, 6, 23) 100%);
-  --gradient-card: linear-gradient(135deg, rgb(51, 65, 85) 0%, rgb(55, 65, 81) 50%, rgb(45, 55, 72) 100%);
-  --gradient-card-hover: linear-gradient(135deg, rgb(63, 75, 95) 0%, rgb(67, 77, 93) 50%, rgb(57, 67, 84) 100%);
-  --gradient-accent: linear-gradient(90deg, rgb(51, 65, 85) 0%, rgb(55, 65, 81) 100%);
+  --gradient-card: linear-gradient(135deg, rgb(79, 70, 229) 0%, rgb(59, 130, 246) 50%, rgb(16, 185, 129) 100%);
+  --gradient-card-hover: linear-gradient(135deg, rgb(99, 90, 255) 0%, rgb(79, 150, 255) 50%, rgb(36, 205, 149) 100%);
+  --gradient-accent: linear-gradient(90deg, rgb(79, 70, 229) 0%, rgb(59, 130, 246) 100%);
   
   /* Status colors optimized for dark mode */
   --success: 34 197 94;        /* emerald-500 */
@@ -213,6 +213,17 @@ html:not(.dark) .card {
   backdrop-filter: blur(10px);
 }
 
+.card-accent-small-padding {
+  @apply rounded-2xl p-[1px] shadow-lg transition-all duration-300 relative overflow-hidden;
+  background: var(--gradient-card);
+}
+
+.card-accent-small-padding > * {
+  @apply rounded-2xl p-3 relative z-10;
+  background: rgba(var(--bg-primary), 0.98);
+  backdrop-filter: blur(10px);
+}
+
 /* Dark mode enhancements for gradient header buttons */
 .dark .card-accent .btn {
   background: rgba(30, 41, 59, 0.7);
@@ -279,6 +290,47 @@ html:not(.dark) .card {
   font-size: 24px;
   font-weight: 600;
   color: white !important;
+}
+
+/* Light mode text contrast improvements */
+html:not(.dark) .text-gray-600 {
+  color: rgb(55, 65, 81) !important; /* gray-700 - better readability */
+}
+
+html:not(.dark) .text-gray-500 {
+  color: rgb(75, 85, 99) !important; /* gray-600 - improved contrast */
+}
+
+html:not(.dark) .text-gray-400 {
+  color: rgb(107, 114, 128) !important; /* gray-500 - more visible */
+}
+
+/* Improve header subtitle in light mode */
+html:not(.dark) .card-accent p {
+  color: rgb(55, 65, 81) !important; /* Much darker for readability */
+}
+
+/* Better contrast for timestamps and secondary text */
+html:not(.dark) .text-xs {
+  color: rgb(75, 85, 99) !important; /* gray-600 instead of gray-500 */
+}
+
+/* Improve readability of history cards in light mode */
+html:not(.dark) .card .text-xs {
+  color: rgb(75, 85, 99) !important; /* Darker timestamps */
+}
+
+html:not(.dark) .card .text-sm {
+  color: rgb(55, 65, 81) !important; /* Darker descriptions */
+}
+
+/* Better visibility for labels and secondary info */
+html:not(.dark) span.text-xs {
+  color: rgb(75, 85, 99) !important;
+}
+
+html:not(.dark) div.text-xs {
+  color: rgb(75, 85, 99) !important;
 }
 
 .input-field {
