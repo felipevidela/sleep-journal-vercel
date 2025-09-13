@@ -490,25 +490,13 @@ export default function Page() {
 
           {/* Stats - Mobile optimized */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div 
-              className="card stats-card p-3"
-              style={{
-                background: isDark ? 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)' : undefined,
-                border: isDark ? '1px solid rgba(147, 197, 253, 0.4)' : undefined
-              }}
-            >
-              <div className="text-xs" style={{ color: isDark ? 'rgba(255, 255, 255, 0.9)' : undefined }}>Últimos 7 días</div>
-              <div className="text-lg sm:text-2xl font-semibold" style={{ color: isDark ? 'white' : undefined }}>{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
+            <div className="card stats-colorful p-3">
+              <div className="text-xs opacity-90">Últimos 7 días</div>
+              <div className="text-lg sm:text-2xl font-semibold">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
             </div>
-            <div 
-              className="card stats-card p-3"
-              style={{
-                background: isDark ? 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)' : undefined,
-                border: isDark ? '1px solid rgba(147, 197, 253, 0.4)' : undefined
-              }}
-            >
-              <div className="text-xs" style={{ color: isDark ? 'rgba(255, 255, 255, 0.9)' : undefined }}>Últimos 30 días</div>
-              <div className="text-lg sm:text-2xl font-semibold" style={{ color: isDark ? 'white' : undefined }}>{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
+            <div className="card stats-colorful p-3">
+              <div className="text-xs opacity-90">Últimos 30 días</div>
+              <div className="text-lg sm:text-2xl font-semibold">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
             </div>
           </div>
 

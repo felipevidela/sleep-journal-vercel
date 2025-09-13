@@ -253,34 +253,14 @@ html:not(.dark) .card {
   color: rgb(148, 163, 184);
 }
 
-/* Statistics cards - High specificity approach */
-.dark .card-accent .stats-card.card {
-  background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%) !important;
-  border: 1px solid rgba(147, 197, 253, 0.4) !important;
-  backdrop-filter: blur(16px) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
-}
-
-.dark .card-accent .stats-card.card:hover {
-  background: linear-gradient(135deg, #4f82f6 0%, #5f56e5 100%) !important;
-  border: 1px solid rgba(167, 207, 253, 0.6) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Override all text colors in stats cards */
-.dark .card-accent .stats-card.card * {
+/* Colorful stats cards - Simple and direct */
+.dark .card-accent .stats-colorful {
+  background: #3b82f6 !important;
   color: white !important;
 }
 
-.dark .card-accent .stats-card.card .text-xs {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.dark .card-accent .stats-card.card .text-lg,
-.dark .card-accent .stats-card.card .text-2xl {
-  color: rgb(255, 255, 255) !important;
-  font-weight: 700 !important;
+.dark .card-accent .stats-colorful * {
+  color: white !important;
 }
 
 .input-field {
