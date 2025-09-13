@@ -3,20 +3,33 @@
 @tailwind utilities;
 
 :root {
-  --bg: 245 245 255;
+  --bg: 248 250 252;
   
-  /* Light mode colors */
+  /* Enhanced Light mode colors with better contrast */
   --bg-primary: 255 255 255;
-  --bg-secondary: 249 250 251;
-  --bg-accent: 241 245 249;
-  --text-primary: 17 24 39;
-  --text-secondary: 75 85 99;
-  --border: 229 231 235;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --bg-secondary: 243 244 246;
+  --bg-accent: 236 253 245;
+  --text-primary: 31 41 55;
+  --text-secondary: 55 65 81;
+  --text-muted: 107 114 128;
+  --border: 209 213 219;
+  --border-light: 229 231 235;
+  --border-accent: 147 197 253;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   
-  /* Gradients */
-  --gradient-bg: linear-gradient(135deg, rgb(238, 242, 255) 0%, rgb(255, 255, 255) 50%, rgb(240, 249, 255) 100%);
-  --gradient-card: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(14, 165, 233) 50%, rgb(34, 197, 94) 100%);
+  /* Vibrant gradients for light mode */
+  --gradient-bg: linear-gradient(135deg, rgb(248, 250, 252) 0%, rgb(255, 255, 255) 40%, rgb(240, 249, 255) 100%);
+  --gradient-card: linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(52, 211, 153) 100%);
+  --gradient-card-hover: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(16, 185, 129) 100%);
+  --gradient-accent: linear-gradient(90deg, rgb(99, 102, 241) 0%, rgb(59, 130, 246) 100%);
+  
+  /* Status colors for light mode */
+  --success: 34 197 94;
+  --warning: 251 146 60;
+  --error: 239 68 68;
+  --info: 59 130 246;
 }
 
 .dark {
@@ -111,11 +124,18 @@ input[type=number] {
 /* Enhanced component styles with superior dark mode support */
 .card {
   @apply rounded-2xl border transition-all duration-300 backdrop-blur-sm;
-  background: rgba(var(--bg-primary), 0.95);
+  background: rgba(var(--bg-primary), 0.98);
   border-color: rgb(var(--border));
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+}
+
+/* Light mode card enhancements */
+html:not(.dark) .card {
+  background: white;
+  border-color: rgb(209, 213, 219);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .card::before {
@@ -202,6 +222,19 @@ input[type=number] {
   font-weight: inherit;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05), var(--shadow);
   position: relative;
+}
+
+/* Light mode input enhancements */
+html:not(.dark) .input-field {
+  background: rgb(249, 250, 251);
+  border-color: rgb(209, 213, 219);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+html:not(.dark) .input-field:focus {
+  background: white;
+  border-color: rgb(147, 197, 253);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .dark .input-field {
@@ -291,6 +324,21 @@ input[type="date"]::-moz-datetime-edit-year-field {
   position: relative;
 }
 
+/* Enhanced light mode button styles */
+html:not(.dark) .btn {
+  background: white;
+  border-color: rgb(209, 213, 219);
+  color: rgb(31, 41, 55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .btn:hover {
+  background: rgb(249, 250, 251);
+  border-color: rgb(156, 163, 175);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
 .dark .btn {
   background: rgba(var(--bg-secondary), 0.6);
   box-shadow: var(--shadow);
@@ -352,6 +400,18 @@ input[type="date"]::-moz-datetime-edit-year-field {
   font-size: 0.875rem;
   font-weight: 500;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced light mode primary button */
+html:not(.dark) .btn-primary {
+  background: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(37, 99, 235) 100%);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+}
+
+html:not(.dark) .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgb(37, 99, 235) 0%, rgb(29, 78, 216) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .btn-primary:hover:not(:disabled) {
