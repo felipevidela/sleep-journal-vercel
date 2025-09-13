@@ -253,10 +253,10 @@ html:not(.dark) .card {
   color: rgb(148, 163, 184);
 }
 
-/* Stats box - Completely custom from scratch */
+/* Stats box - Always blue, no conflicts */
 .stats-box {
-  background: #3b82f6;
-  color: white;
+  background: #3b82f6 !important;
+  color: white !important;
   padding: 12px;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -272,27 +272,13 @@ html:not(.dark) .card {
   font-size: 12px;
   opacity: 0.9;
   margin-bottom: 4px;
-  color: white;
+  color: white !important;
 }
 
 .stats-value {
   font-size: 24px;
   font-weight: 600;
-  color: white;
-}
-
-/* Light mode version */
-html:not(.dark) .stats-box {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-html:not(.dark) .stats-label {
-  color: #6b7280;
-}
-
-html:not(.dark) .stats-value {
-  color: #111827;
+  color: white !important;
 }
 
 .input-field {
