@@ -488,15 +488,15 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Stats - Mobile optimized */}
+          {/* Stats - Custom boxes from scratch */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="card stats-colorful p-3">
-              <div className="text-xs opacity-90">Últimos 7 días</div>
-              <div className="text-lg sm:text-2xl font-semibold">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
+            <div className="stats-box">
+              <div className="stats-label">Últimos 7 días</div>
+              <div className="stats-value">{data.avg7 ? data.avg7.toFixed(1) : "—"}</div>
             </div>
-            <div className="card stats-colorful p-3">
-              <div className="text-xs opacity-90">Últimos 30 días</div>
-              <div className="text-lg sm:text-2xl font-semibold">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
+            <div className="stats-box">
+              <div className="stats-label">Últimos 30 días</div>
+              <div className="stats-value">{data.avg30 ? data.avg30.toFixed(1) : "—"}</div>
             </div>
           </div>
 
